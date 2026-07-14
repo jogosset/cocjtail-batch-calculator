@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #ffffff;
+    color: #1f2430;
+    padding: 24px;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #6b7280; font-size: 13px; margin-bottom: 20px; }
+  .card {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 16px;
+  }
+  .card h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin: 0 0 12px; }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 100px 32px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  input[type=text], input[type=number] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    color: #1f2430;
+  }
+  input[type=number] { text-align: right; }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .del-btn {
+    background: none;
+    color: #b91c1c;
+    font-size: 18px;
+    line-height: 1;
+    padding: 4px;
+  }
+  .add-btn {
+    background: #eef2ff;
+    color: #4338ca;
+    padding: 8px 14px;
+    margin-top: 4px;
+  }
+  .bottle-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  select {
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    color: #1f2430;
+  }
+  .custom-oz { display: none; width: 100px; }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .stat {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 10px 12px;
+    text-align: center;
+  }
+  .stat .val { font-size: 18px; font-weight: 700; color: #111827; }
+  .stat .lbl { font-size: 11px; color: #6b7280; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  th, td { text-align: left; padding: 8px 6px; font-size: 14px; }
+  th { color: #6b7280; font-weight: 600; font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
+  td { border-bottom: 1px solid #f0f1f3; }
+  td.num, th.num { text-align: right; }
+  tfoot td { font-weight: 700; border-top: 2px solid #e5e7eb; border-bottom: none; }
+  .batches-input { width: 70px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; text-align: right; }
+  label { font-size: 13px; color: #374151; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Batch Any Cocktail Calculator</h1>
+  <div class="sub">Scale any recipe up to a full bottle batch. Based on: Recipe Oz &divide; Bottle Oz = multiplier, applied to each ingredient.</div>
+
+  <div class="card">
+    <h2>Recipe (per single drink)</h2>
+    <div id="ingredients"></div>
+    <button class="add-btn" onclick="addRow()">+ Add ingredient</button>
+  </div>
+
+  <div class="card">
+    <h2>Batch container</h2>
+    <div class="bottle-row">
+      <select id="bottleSelect" onchange="onBottleChange()">
+        <option value="25.36">750 mL bottle (25.36 oz)</option>
+        <option value="33.8">1 L bottle (33.8 oz)</option>
+        <option value="59.2">1.75 L bottle (59.2 oz)</option>
+        <option value="128">1 gallon (128 oz)</option>
+        <option value="custom">Custom size&hellip;</option>
+      </select>
+      <input type="number" step="0.01" class="custom-oz" id="customOz" placeholder="oz" oninput="render()">
+      <label>&times; </label>
+      <input type="number" min="1" step="1" class="batches-input" id="numBatches" value="1" oninput="render()">
+      <label>batch(es)</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Result</h2>
+    <div class="stat-grid">
+      <div class="stat"><div class="val" id="tro">-</div><div class="lbl">Total recipe oz (TRO)</div></div>
+      <div class="stat"><div class="val" id="bco">-</div><div class="lbl">Batch container oz (BCO)</div></div>
+      <div class="stat"><div class="val" id="mult">-</div><div class="lbl">Multiplier (BCO &divide; TRO)</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Ingredient</th><th class="num">Per drink (oz)</th><th class="num">Batch amount (oz)</th></tr>
+      </thead>
+      <tbody id="resultBody"></tbody>
+      <tfoot>
+        <tr><td>Total</td><td class="num" id="totalPerDrink">-</td><td class="num" id="totalBatch">-</td></tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<script>
+let ingredients = [
+  { name: "Lime Juice", oz: 0.5 },
+  { name: "Simple Syrup", oz: 1 },
+  { name: "Bourbon", oz: 3 }
+];
+
+function addRow(name = "", oz = "") {
+  ingredients.push({ name, oz });
+  render();
+}
+
+function removeRow(i) {
+  ingredients.splice(i, 1);
+  render();
+}
+
+function updateName(i, val) {
+  ingredients[i].name = val;
+}
+
+function updateOz(i, val) {
+  ingredients[i].oz = parseFloat(val) || 0;
+  render();
+}
+
+function onBottleChange() {
+  const sel = document.getElementById('bottleSelect');
+  document.getElementById('customOz').style.display = sel.value === 'custom' ? 'block' : 'none';
+  render();
+}
+
+function getBCO() {
+  const sel = document.getElementById('bottleSelect');
+  if (sel.value === 'custom') {
+    return parseFloat(document.getElementById('customOz').value) || 0;
+  }
+  return parseFloat(sel.value);
+}
+
+function renderIngredientInputs() {
+  const container = document.getElementById('ingredients');
+  container.innerHTML = '';
+  ingredients.forEach((ing, i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <input type="text" value="${ing.name}" placeholder="Ingredient name" oninput="updateName(${i}, this.value)">
+      <input type="number" step="0.01" value="${ing.oz}" placeholder="oz" oninput="updateOz(${i}, this.value)">
+      <button class="del-btn" onclick="removeRow(${i})" title="Remove">&times;</button>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function render() {
+  renderIngredientInputs();
+
+  const bco = getBCO();
+  const numBatches = parseInt(document.getElementById('numBatches').value) || 1;
+  const tro = ingredients.reduce((sum, ing) => sum + (parseFloat(ing.oz) || 0), 0);
+  const totalBCO = bco * numBatches;
+  const mult = tro > 0 ? totalBCO / tro : 0;
+
+  document.getElementById('tro').textContent = tro ? tro.toFixed(2) + ' oz' : '-';
+  document.getElementById('bco').textContent = bco ? totalBCO.toFixed(2) + ' oz' : '-';
+  document.getElementById('mult').textContent = (tro > 0 && bco > 0) ? mult.toFixed(3) + '×' : '-';
+
+  const tbody = document.getElementById('resultBody');
+  tbody.innerHTML = '';
+  let totalBatchOz = 0;
+  ingredients.forEach(ing => {
+    const oz = parseFloat(ing.oz) || 0;
+    const batchOz = oz * mult;
+    totalBatchOz += batchOz;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${ing.name || '(unnamed)'}</td><td class="num">${oz.toFixed(2)}</td><td class="num">${batchOz.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('totalPerDrink').textContent = tro.toFixed(2);
+  document.getElementById('totalBatch').textContent = totalBatchOz.toFixed(2);
+}
+
+render();
+</script>
+</body>
+</html>
